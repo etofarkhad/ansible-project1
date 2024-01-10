@@ -1,0 +1,49 @@
+---
+
+- name: prepare the build environment
+  hosts: slave1
+  become: yes
+
+  tasks:
+
+  - name: ensure jdk package is present
+    apt:
+     name: default-jdk
+     state: present
+
+  - name: ensure maven package is present
+    apt:
+     name: maven
+     state: present
+
+  - name: ensure git package is present
+    apt:
+      name: git
+      state: present
+
+  - name: clone boxfuse rep
+    git:
+      repo: https://github.com/boxfuse/boxfuse-sample-java-war-hello.git
+      dest: /home/farkhad/project
+
+  - name: package project with maven
+    command:
+      cmd: mvn package
+      chdir: /home/farkhad/project
+
+- name: prepare the production environment
+  hosts: slave2
+  become: yes
+
+  tasks:
+
+  - name: ensure tomcat package is present
+    apt:
+     name: tomcat9
+     state: present
+
+  - name: copy project to slave2
+    synchronize:
+      src: /home/farkhad/project/target/
+      dest: /var/lib/tomcat9/webapps/
+    delegate_to: slave2
